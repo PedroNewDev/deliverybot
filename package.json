@@ -1,0 +1,16 @@
+{
+  "name": "deliverybot",
+  "version": "1.0.0",
+  "description": "DeliveryBot: pedidos de restaurante com fila de preparo e mensagens ao cliente",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

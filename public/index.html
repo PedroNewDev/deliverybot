@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeliveryBot | Cozinha do Iguaçu</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231C2B29'/%3E%3Crect x='8' y='7' width='16' height='19' fill='%23FFFDF5'/%3E%3Crect x='8' y='7' width='16' height='5' fill='%23F2A30F'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+  <!-- ?v= muda a cada publicação: o Cloudflare guarda CSS/JS por 4 h no navegador -->
+  <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <strong>DeliveryBot</strong>
+      <span>Cozinha do Iguaçu</span>
+    </div>
+    <nav class="abas" aria-label="Seções">
+      <a class="aba" href="#novo">Novo pedido</a>
+      <a class="aba" href="#pedidos">Pedidos <span class="contador" id="cont-pedidos" hidden></span></a>
+      <a class="aba" href="#cozinha">Cozinha <span class="contador" id="cont-cozinha" hidden></span></a>
+      <a class="aba" href="#mensagens">Mensagens</a>
+      <a class="aba" href="#cardapio">Cardápio</a>
+      <a class="aba aba-externa" href="/pedir" target="_blank" rel="noopener">Página do cliente</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Novo pedido: cardápio + comanda -->
+    <section class="view novo" id="view-novo" hidden>
+      <div class="menu-col">
+        <h1>Novo pedido</h1>
+        <div id="menu"></div>
+      </div>
+
+      <aside class="comanda" id="comanda" aria-labelledby="comanda-titulo">
+        <h2 id="comanda-titulo">Comanda</h2>
+        <form id="form-pedido" autocomplete="off">
+          <div class="comanda-corpo">
+            <div class="comanda-itens" id="itens-comanda"></div>
+
+            <fieldset>
+              <legend>Cliente</legend>
+              <div class="duas">
+                <label>Telefone
+                  <input name="telefone" inputmode="tel" placeholder="(42) 99999-0000" required>
+                </label>
+                <label>Nome
+                  <input name="nome" required>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Entrega</legend>
+              <div class="duas">
+                <label>CEP
+                  <input name="cep" inputmode="numeric" placeholder="84600-000" required>
+                </label>
+                <label>Número
+                  <input name="numero" required>
+                </label>
+              </div>
+              <p class="cep-status" id="cep-status" aria-live="polite"></p>
+              <label>Rua
+                <input name="logradouro" required>
+              </label>
+              <div class="duas">
+                <label>Complemento
+                  <input name="complemento">
+                </label>
+                <label>Bairro
+                  <input name="bairro">
+                </label>
+              </div>
+            </fieldset>
+
+            <label>Observação
+              <textarea name="observacao" rows="2" placeholder="Ex.: sem cebola, troco para R$ 100"></textarea>
+            </label>
+          </div>
+
+          <div class="comanda-rodape">
+            <div class="total">
+              <span>Total</span>
+              <strong id="total">R$ 0,00</strong>
+            </div>
+            <button class="btn btn-cheio" type="submit">Confirmar pedido</button>
+          </div>
+        </form>
+      </aside>
+
+      <div class="barra-carrinho" id="barra-carrinho" hidden>
+        <span id="barra-resumo"></span>
+        <button class="btn btn-fogo" type="button" id="ir-comanda">Ver comanda</button>
+      </div>
+    </section>
+
+    <!-- Pedidos: acompanhamento até a entrega -->
+    <section class="view pedidos" id="view-pedidos" hidden>
+      <h1>Pedidos</h1>
+      <h2>Em andamento</h2>
+      <ol class="lista-pedidos" id="lista-andamento"></ol>
+      <h2>Entregues</h2>
+      <ol class="lista-pedidos entregues" id="lista-entregues"></ol>
+    </section>
+
+    <!-- Cozinha: fila de preparo -->
+    <section class="view cozinha" id="view-cozinha" hidden>
+      <div class="cozinha-topo">
+        <h1>Fila de preparo</h1>
+        <p id="cozinha-resumo"></p>
+      </div>
+      <div class="trilho">
+        <div class="tickets" id="tickets"></div>
+      </div>
+    </section>
+
+    <!-- Mensagens enviadas pelo bot -->
+    <section class="view mensagens" id="view-mensagens" hidden>
+      <div class="conversas">
+        <h1>Mensagens</h1>
+        <p class="nota">Simulação: o bot registra aqui o que o cliente receberia por WhatsApp ou SMS.</p>
+        <ul id="lista-conversas"></ul>
+      </div>
+      <div class="conversa" id="conversa"></div>
+    </section>
+
+    <!-- Cadastro do cardápio -->
+    <section class="view cardapio" id="view-cardapio" hidden>
+      <div>
+        <h1>Cardápio</h1>
+        <div class="tabela-wrap">
+          <table class="tabela" id="tabela-produtos">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th class="num">Preço</th>
+                <th class="num">Preparo</th>
+                <th>Disponível</th>
+                <th><span class="sr">Ações</span></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <form class="ficha" id="form-produto" autocomplete="off">
+        <h2 id="form-produto-titulo">Novo produto</h2>
+        <label>Nome
+          <input name="nome" required>
+        </label>
+        <label>Categoria
+          <input name="categoria" list="categorias" required>
+          <datalist id="categorias"></datalist>
+        </label>
+        <label>Descrição
+          <input name="descricao" placeholder="Opcional">
+        </label>
+        <label>Foto
+          <input name="foto" placeholder="fotos/pastel.jpg ou https://…">
+        </label>
+        <div class="duas">
+          <label>Preço (R$)
+            <input name="preco" type="number" min="0" step="0.01" required>
+          </label>
+          <label>Preparo (min)
+            <input name="tempo_preparo" type="number" min="0" step="1" value="15" required>
+          </label>
+        </div>
+        <label class="check">
+          <input type="checkbox" name="disponivel" checked> Disponível para pedidos
+        </label>
+        <div class="ficha-acoes">
+          <button class="btn btn-cheio" type="submit" id="salvar-produto">Cadastrar produto</button>
+          <button class="btn btn-texto" type="button" id="cancelar-edicao" hidden>Cancelar edição</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
+  <script src="app.js?v=2"></script>
+</body>
+</html>
